@@ -16,11 +16,11 @@ export const NavBar = () => {
             />
           </li>
           <li>
-            <p className='text-2xl'>SecurePassGen</p>
+            <p className='text-2xl font-semibold'>SecurePassGen</p>
           </li>
           <li>
             <p className='text-[29px]'>
-            <i className='bx bx-menu'></i>
+            
             </p>
           </li>
         </ul>
