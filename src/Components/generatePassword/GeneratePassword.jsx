@@ -100,7 +100,6 @@ export const GeneratePassword = () => {
 
   const handleSavePassword = async (e)=>{
     e.preventDefault();
-    console.log(user.displayName, password , passwordName)
     if( !user) {
       toast.error("Please SignIn to Save Passsword");
       return;
