@@ -128,7 +128,7 @@ export const GeneratePassword = () => {
         console.log(error)
       }
       finally{
-        setFetching(true);
+        setFetching(false);
         handleClose();
       }
     }
