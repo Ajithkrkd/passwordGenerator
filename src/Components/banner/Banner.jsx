@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import './banner.css'
+import '/src/Components/generatePassword/generate.css'
 export const Banner = () => {
   const handleScroll = () => {
     const generateSection = document.getElementById("generate");
@@ -26,6 +27,7 @@ export const Banner = () => {
             
           </span>
         </button>
+       
       </div>
       <div className=" px-3 py-4 flex flex-col">
        <img style={{maxWidth:400}} src='/logo.png'/>

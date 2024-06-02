@@ -1,8 +1,25 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import { UserAuth } from "../../context/AuthContext";
+import { addDoc, collection } from "firebase/firestore";
+import { db } from "../../firebase/config";
+import { useNavigate } from "react-router-dom";
+import Loader from "../common/Loader";
 
 export const GeneratePassword = () => {
-  const [password, setPassword] = useState("password");
+
+  const {user} = UserAuth();
+  const navigate = useNavigate();
+  const [fetching, setFetching] = useState(false);
+  const [passwordName , setPasswordName] = useState(null);
+  const [password, setPassword] = useState(null);
   const [passwordLength, setPasswordLength] = useState(6);
   const [tooltip, setTooltip] = useState("");
   const [options, setOptions] = useState({
@@ -11,6 +28,15 @@ export const GeneratePassword = () => {
     numbers: true,
     symbols: true,
   });
+  const [open, setOpen] = React.useState(false);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
 
   function generateRandomPassword(length, options) {
     
@@ -19,7 +45,7 @@ export const GeneratePassword = () => {
       lowercase: true,
       numbers: true,
       symbols: true,
-      excludeSimilar: true, // Exclude easily confused characters (l1, IoO, etc.)
+      excludeSimilar: true, 
     };
     
     if (!options.uppercase && !options.lowercase && !options.numbers && !options.symbols) {
@@ -72,8 +98,47 @@ export const GeneratePassword = () => {
     }));
   };
 
+  const handleSavePassword = async (e)=>{
+    e.preventDefault();
+    console.log(user.displayName, password , passwordName)
+    if( !user) {
+      toast.error("Please SignIn to Save Passsword");
+      return;
+    }
+    if( !password) {
+      toast.error("Please Generate a password first !");
+      return;
+    }
+    if( !passwordName) {
+      toast.error(" Oops !! Please Type a Name !");
+      return;
+    }
+    if(user && password && passwordName) {
+      try {
+        setFetching(true)
+       const result =  await addDoc(collection(db,"users",user.uid,"password"),{
+          passwordName:passwordName,
+          password: password,
+          createdAt: new Date()
+        });
+        console.log(result ,'result after  saved')
+        toast.success("Password saved successfully ");
+        setPasswordName('');
+      } catch (error) {
+        console.log('first')
+        console.log(error)
+      }
+      finally{
+        setFetching(true);
+        handleClose();
+      }
+    }
+  }
+
+
   return (
     <>
+    {fetching && <Loader/>}
       <div className="p-4 bg-[#2480EA]" id="generate">
         <p className="text-[#FFFF] font-semibold text-[16px] md:text-3xl text-center mb-4">
           Customize your passwords with symbols, numbers, <br /> uppercase, and
@@ -82,9 +147,9 @@ export const GeneratePassword = () => {
         <div className="flex flex-col items-center justify-center p-2 pt-5 mt-3">
           <div className="flex md:flex-row flex-col  justify-between bg-white w-full max-w-sm p-2 rounded relative">
             <div>
-            <p className="text-xl text-[green] ">{password}</p>
+            <p className="text-xl text-[green] ">{password? password : "your password goes here !!"}</p>
             </div>
-            <div className="flex flex-row gap-3 ">
+            <div className="flex flex-row justify-end gap-3 ">
               <p
                 className="cursor-pointer text-2xl"
                 onClick={handleGeneratePassword}
@@ -102,6 +167,8 @@ export const GeneratePassword = () => {
               )}
             </div>
           </div>
+          
+       
 
           <div className="flex flex-col justify-between bg-white w-full max-w-sm p-2 rounded m-5 gap-5">
             <div className="text-center border-[2px] p-1">
@@ -171,14 +238,55 @@ export const GeneratePassword = () => {
               </label>
             </div>
             <button
-              className="btn bg-[#FFA900] p-2 dark:hover:bg-gray-900 transition ease-in-out delay-250 duration-300"
+              className="btn bg-[#2480EA] p-2 dark:hover:bg-gray-900 transition ease-in-out delay-250 duration-300"
               onClick={handleGeneratePassword}
             >
               <span className="font-semibold text-[18px] text-[#FFFF]">Generate</span>
             </button>
+            <button
+              className="btn bg-[#82B536] p-2 dark:hover:bg-gray-900 transition ease-in-out delay-250 duration-300"
+              onClick={handleClickOpen}
+            >
+              <span className="font-semibold text-[18px] text-[#FFFF]">Save Password</span>
+            </button>
+            <button
+              className="btn bg-[#2480EA] p-2 dark:hover:bg-gray-900 transition ease-in-out delay-250 duration-300"
+              onClick={()=>{navigate("/profile")}}
+            >
+              <span className="font-semibold text-[18px] text-[#FFFF]">My Saved Password</span>
+            </button>
           </div>
         </div>
       </div>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        >
+        <DialogTitle>Save password</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+           Do you want to save this password ?
+           Enter a name for your password eg: my google password
+          </DialogContentText>
+          <TextField
+            autoFocus
+            required
+            margin="dense"
+            id="name"
+            name="email"
+            label="Name"
+            type="text"
+            fullWidth
+            variant="standard"
+            onChange={(e) => setPasswordName(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Cancel</Button>
+          <Button type="button" onClick={handleSavePassword}>Save</Button>
+        </DialogActions>
+      </Dialog>
+      
     </>
   );
 };
